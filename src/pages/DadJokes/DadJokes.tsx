@@ -104,15 +104,15 @@ const DadJokes = () => {
           </button>
         </div>
       </form>
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col">
         {jokesData?.pages.map((page, index) => (
           <div
-            key={index}
+            key={page.data.next_page}
             className="flex flex-col">
             {page.data.results.map((joke) => (
               <div
                 key={joke.id}
-                className="flex flex-col gap-2 p-4 border border-gray-200 rounded-lg">
+                className="flex flex-col gap-2 px-3 py-4 border border-gray-200 rounded-lg">
                 <span className="text-lg font-semibold">{joke.joke}</span>
               </div>
             ))}
