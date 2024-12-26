@@ -21,7 +21,6 @@ const DadJokes = () => {
 
   const {
     data: jokesData,
-    isLoading: jokesIsLoading,
     hasNextPage: jokesHasNextPage,
     fetchNextPage: jokesFetchNextPage,
     isFetchingNextPage: jokesIsFetchingNextPage,
@@ -29,7 +28,7 @@ const DadJokes = () => {
     queryKey: ["infiniteDadJokes", { term }],
     queryFn: ({ pageParam = 1 }) => jokesApi.searchJokes({ term, page: pageParam }),
     initialPageParam: 1,
-    getNextPageParam: (lastPage, pages) => {
+    getNextPageParam: (lastPage) => {
       if (lastPage.data.next_page === null) {
         return undefined;
       }
