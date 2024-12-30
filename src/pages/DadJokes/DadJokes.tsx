@@ -3,10 +3,14 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { dadJokesSchema, TDadJokesSchema } from "src/schemas/dadJokes.schemas";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { jokesApi } from "src/apis/jokes.apis";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useInView } from "react-intersection-observer";
+import useQueryConfig from "src/hooks/useQueryConfig";
+import { useNavigate } from "react-router-dom";
 
 const DadJokes = () => {
+  const { term } = useQueryConfig();
+  const navigate = useNavigate();
   const {
     ref: loadMoreRef,
     inView,
@@ -15,8 +19,7 @@ const DadJokes = () => {
     triggerOnce: false,
     rootMargin: "0px 0px 80px 0px",
   });
-  const [term, setTerm] = useState("");
-  // const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
   const {
     handleSubmit,
     register,
@@ -37,7 +40,7 @@ const DadJokes = () => {
     queryFn: ({ pageParam = 1 }) => jokesApi.searchJokes({ term, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
-      if (lastPage.data.next_page === null) {
+      if (lastPage.data.next_page === lastPage.data.current_page) {
         return undefined;
       }
       return lastPage.data.next_page;
@@ -45,7 +48,7 @@ const DadJokes = () => {
   });
 
   const handleSubmitForm = handleSubmit((data) => {
-    setTerm(data.term);
+    navigate({ search: `?term=${data.term}` });
     queryClient.invalidateQueries({ queryKey: ["dadJokes", { term: data.term }] });
   });
 
@@ -60,7 +63,7 @@ const DadJokes = () => {
     },
     [jokesHasNextPage],
   );
-
+  console.log(jokesHasNextPage);
   useEffect(() => {
     if (inView) {
       handleLoadMore(entry as IntersectionObserverEntry);
@@ -110,6 +113,7 @@ const DadJokes = () => {
                 className="w-full outline-none bg-transparent"
                 placeholder="Enter your content..."
                 {...register("term")}
+                defaultValue={term}
               />
             </div>
             <span className="h-4 text-red-500">{errors.term?.message}</span>
