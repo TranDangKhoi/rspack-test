@@ -1,11 +1,11 @@
 import omitBy from "lodash/omitBy";
 import isNil from "lodash/isNil";
 import useQueryParams from "src/hooks/useQueryParams";
-import { TDadJokesQuery } from "src/types/params.types";
+import { TDadJokesSchema } from "src/schemas/dadJokes.schemas";
 
 const useQueryConfig = () => {
   const searchParams = useQueryParams();
-  const queryConfig: TDadJokesQuery = omitBy({ term: searchParams.term || "" }, isNil) as TDadJokesQuery;
+  const queryConfig: TDadJokesSchema = omitBy({ term: searchParams.term || "" }, isNil) as TDadJokesSchema;
   return queryConfig;
 };
 
