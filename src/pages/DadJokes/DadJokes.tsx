@@ -72,7 +72,7 @@ const DadJokes = () => {
       handleLoadMore(entry as IntersectionObserverEntry);
     }
   }, [inView, handleLoadMore, entry]);
-  console.log(term);
+
   return (
     <>
       <form
