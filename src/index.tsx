@@ -24,8 +24,7 @@ if (rootEl) {
           <App />
           <ReactQueryDevtools
             client={queryClient}
-            initialIsOpen={false}
-          ></ReactQueryDevtools>
+            initialIsOpen={false}></ReactQueryDevtools>
         </QueryClientProvider>
       </BrowserRouter>
     </React.StrictMode>,

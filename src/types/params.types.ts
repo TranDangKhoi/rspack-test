@@ -1,3 +1,3 @@
-export type TSearchParams = {
+export type TDadJokesQuery = {
   term: string;
 };

@@ -1,12 +1,12 @@
-import { useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
+import useQueryConfig from "src/hooks/useQueryConfig";
 import { dadJokesSchema, TDadJokesSchema } from "src/schemas/dadJokes.schemas";
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { jokesApi } from "src/apis/jokes.apis";
 import { useCallback, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useInView } from "react-intersection-observer";
-import useQueryConfig from "src/hooks/useQueryConfig";
 import { useNavigate } from "react-router-dom";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 const DadJokes = () => {
   const { term } = useQueryConfig();
@@ -35,9 +35,12 @@ const DadJokes = () => {
     data: jokesData,
     hasNextPage: jokesHasNextPage,
     fetchNextPage: jokesFetchNextPage,
+    isLoading: jokesIsLoading,
   } = useInfiniteQuery({
     queryKey: ["infiniteDadJokes", { term }],
-    queryFn: ({ pageParam = 1 }) => jokesApi.searchJokes({ term, page: pageParam }),
+    queryFn: ({ pageParam = 1 }) => {
+      return jokesApi.searchJokes({ term: term, page: pageParam });
+    },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.data.next_page === lastPage.data.current_page) {
@@ -48,7 +51,7 @@ const DadJokes = () => {
   });
 
   const handleSubmitForm = handleSubmit((data) => {
-    navigate({ search: `?term=${data.term}` });
+    navigate({ pathname: "/", search: `?term=${data.term}` });
     queryClient.invalidateQueries({ queryKey: ["dadJokes", { term: data.term }] });
   });
 
@@ -63,36 +66,21 @@ const DadJokes = () => {
     },
     [jokesHasNextPage],
   );
-  console.log(jokesHasNextPage);
+
   useEffect(() => {
     if (inView) {
       handleLoadMore(entry as IntersectionObserverEntry);
     }
   }, [inView, handleLoadMore, entry]);
-
-  // useEffect(() => {
-  //   const observer = new IntersectionObserver(handleLoadMore, {
-  //     rootMargin: "0px 0px 80px 0px",
-  //     threshold: 1.0,
-  //   });
-
-  //   if (loadMoreRef.current) {
-  //     observer.observe(loadMoreRef.current);
-  //   }
-
-  //   return () => {
-  //     observer.disconnect();
-  //   };
-  // }, [handleLoadMore]);
-
+  console.log(term);
   return (
     <>
       <form
-        className="flex flex-col gap-4 mx-auto w-[700px] mt-6"
+        className="flex flex-col gap-1 mx-auto w-[700px] mt-6"
         onSubmit={handleSubmitForm}>
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between">
           <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-5 w-[360px] border border-gray-200 rounded-lg py-3 px-5">
+            <div className="flex items-center gap-5 w-[420px] h-[50px] border border-gray-200 rounded-lg py-3 px-5">
               <span className="flex-shrink-0 text-gray-500">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -116,16 +104,16 @@ const DadJokes = () => {
                 defaultValue={term}
               />
             </div>
-            <span className="h-4 text-red-500">{errors.term?.message}</span>
           </div>
           <button
             type="submit"
-            className="inline-flex items-center justify-center px-8 py-4 font-semibold tracking-wide text-white bg-blue-500 rounded-lg h-[60px]">
+            className="inline-flex items-center justify-center px-8 py-4 font-semibold tracking-wide text-white bg-blue-500 rounded-lg h-[50px]">
             Search
           </button>
         </div>
+        <span className="h-2 text-red-500 text-sm">{errors.term?.message}</span>
       </form>
-      <div className="flex flex-col">
+      <div className="flex flex-col mt-2 mx-auto w-[1200px]">
         {jokesData?.pages.map((page) => (
           <div
             key={page.data.next_page}
@@ -133,18 +121,20 @@ const DadJokes = () => {
             {page.data.results.map((joke) => (
               <div
                 key={joke.id}
-                className="flex flex-col gap-2 px-3 py-4 border border-gray-200 rounded-lg">
+                className="flex flex-col gap-2 px-3 py-4 rounded-lg">
                 <span className="text-lg font-semibold">{joke.joke}</span>
               </div>
             ))}
           </div>
         ))}
-        {jokesHasNextPage && (
+        {jokesHasNextPage || jokesIsLoading ? (
           <div
             ref={loadMoreRef}
             className="flex items-center justify-center h-16">
             Loading more jokes...
           </div>
+        ) : (
+          <div className="flex items-center justify-center h-16">No jokes found</div>
         )}
       </div>
     </>
