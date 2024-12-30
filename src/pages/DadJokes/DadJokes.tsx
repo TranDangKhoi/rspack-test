@@ -4,10 +4,19 @@ import { dadJokesSchema, TDadJokesSchema } from "src/schemas/dadJokes.schemas";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { jokesApi } from "src/apis/jokes.apis";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useInView } from "react-intersection-observer";
 
 const DadJokes = () => {
+  const {
+    ref: loadMoreRef,
+    inView,
+    entry,
+  } = useInView({
+    triggerOnce: false,
+    rootMargin: "0px 0px 80px 0px",
+  });
   const [term, setTerm] = useState("");
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  // const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const {
     handleSubmit,
     register,
@@ -18,12 +27,11 @@ const DadJokes = () => {
     reValidateMode: "onChange",
   });
   const queryClient = useQueryClient();
-
+  const isFetchingRef = useRef(false);
   const {
     data: jokesData,
     hasNextPage: jokesHasNextPage,
     fetchNextPage: jokesFetchNextPage,
-    isFetchingNextPage: jokesIsFetchingNextPage,
   } = useInfiniteQuery({
     queryKey: ["infiniteDadJokes", { term }],
     queryFn: ({ pageParam = 1 }) => jokesApi.searchJokes({ term, page: pageParam }),
@@ -42,28 +50,37 @@ const DadJokes = () => {
   });
 
   const handleLoadMore = useCallback(
-    (entries: IntersectionObserverEntry[]) => {
-      if (entries[0].isIntersecting && jokesHasNextPage && !jokesIsFetchingNextPage) {
-        jokesFetchNextPage();
+    async (entries: IntersectionObserverEntry) => {
+      if (entries.isIntersecting && jokesHasNextPage && !isFetchingRef.current) {
+        isFetchingRef.current = true;
+        await jokesFetchNextPage().finally(() => {
+          isFetchingRef.current = false;
+        });
       }
     },
     [jokesHasNextPage],
   );
 
   useEffect(() => {
-    const observer = new IntersectionObserver(handleLoadMore, {
-      rootMargin: "0px 0px 80px 0px",
-      threshold: 1.0,
-    });
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
+    if (inView) {
+      handleLoadMore(entry as IntersectionObserverEntry);
     }
+  }, [inView, handleLoadMore, entry]);
 
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleLoadMore]);
+  // useEffect(() => {
+  //   const observer = new IntersectionObserver(handleLoadMore, {
+  //     rootMargin: "0px 0px 80px 0px",
+  //     threshold: 1.0,
+  //   });
+
+  //   if (loadMoreRef.current) {
+  //     observer.observe(loadMoreRef.current);
+  //   }
+
+  //   return () => {
+  //     observer.disconnect();
+  //   };
+  // }, [handleLoadMore]);
 
   return (
     <>
@@ -105,7 +122,7 @@ const DadJokes = () => {
         </div>
       </form>
       <div className="flex flex-col">
-        {jokesData?.pages.map((page, index) => (
+        {jokesData?.pages.map((page) => (
           <div
             key={page.data.next_page}
             className="flex flex-col">
@@ -122,7 +139,7 @@ const DadJokes = () => {
           <div
             ref={loadMoreRef}
             className="flex items-center justify-center h-16">
-            Loading...
+            Loading more jokes...
           </div>
         )}
       </div>
