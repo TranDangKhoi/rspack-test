@@ -57,12 +57,14 @@ const DadJokes = () => {
 
   const handleLoadMore = useCallback(
     async (entries: IntersectionObserverEntry) => {
+      console.time("#handleeLoadMore");
       if (entries.isIntersecting && jokesHasNextPage && !isFetchingRef.current) {
         isFetchingRef.current = true;
         await jokesFetchNextPage().finally(() => {
           isFetchingRef.current = false;
         });
       }
+      console.timeEnd("#handleeLoadMore");
     },
     [jokesHasNextPage],
   );
