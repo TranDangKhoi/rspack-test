@@ -22,20 +22,22 @@ const InfiniteScrollList = () => {
   const jokes = data?.pages.flatMap((page: any) => page.results) || [];
 
   return (
-    <List
-      height={400}
-      itemCount={jokes.length + (hasNextPage ? 1 : 0)}
-      itemSize={50}
-      width="100%"
-      onItemsRendered={({ visibleStopIndex }) => {
-        if (visibleStopIndex >= jokes.length - 1 && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
+    <div>
+      <List
+        height={400}
+        itemCount={jokes.length + (hasNextPage ? 1 : 0)}
+        itemSize={50}
+        width="100%"
+        onItemsRendered={({ visibleStopIndex }) => {
+          if (visibleStopIndex >= jokes.length - 1 && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}>
+        {({ index, style }) =>
+          index < jokes.length ? <div style={style}>{jokes[index].joke}</div> : <div style={style}>Loading...</div>
         }
-      }}>
-      {({ index, style }) =>
-        index < jokes.length ? <div style={style}>{jokes[index].joke}</div> : <div style={style}>Loading...</div>
-      }
-    </List>
+      </List>
+    </div>
   );
 };
 
